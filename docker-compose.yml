@@ -1,19 +1,25 @@
 services:
   jenkins:
-    image: jenkins/jenkins:lts
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: jenkins
     ports:
-      - "8080:8080"
+      - "8081:8081"
       - "50000:50000"
     volumes:
       - jenkins_home:/var/jenkins_home
-      - /var/run/docker.sock:/var/run/docker.sock  # Allow Jenkins to access Docker
-    networks:
-      - jenkins-network  # Define the network
+      - /var/run/docker.sock:/var/run/docker.sock
 
-networks:
-  jenkins-network:  # Define the network here
-    driver: bridge
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./html:/usr/share/nginx/html
 
 volumes:
   jenkins_home:
