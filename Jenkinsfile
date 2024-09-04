@@ -1,48 +1,18 @@
 pipeline {
     agent any
-    
-    environment {
-        DOCKER_HUB_REPO = 'shashwatchaturvedi26072002/jenkins-docker'  // Your DockerHub repo
-        DOCKER_HUB_CREDENTIALS_ID = 'dockerhub-credentials'  // Use Jenkins credentials ID
-    }
-    
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git branch: 'main', url: 'https://github.com/ShashwatChaturvedi/Jenkins-Docker'
+                checkout scm
             }
         }
-
-        stage('Build Docker Image') {
+        stage('Deploy') {
             steps {
-                script {
-                    dockerImage = docker.build("${env.DOCKER_HUB_REPO}:${env.BUILD_NUMBER}")
-                }
+                sh 'docker build -t my-simple-static-site .'
+                sh 'docker stop my-simple-static-site-container || true'
+                sh 'docker rm my-simple-static-site-container || true'
+                sh 'docker run -d --name my-simple-static-site-container -p 80:80 my-simple-static-site'
             }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                script {
-                    docker.withRegistry('https://index.docker.io/v1/', "${env.DOCKER_HUB_CREDENTIALS_ID}") {
-                        dockerImage.push("${env.BUILD_NUMBER}")
-                    }
-                }
-            }
-        }
-
-        stage('Deploy Docker Container') {
-            steps {
-                script {
-                    dockerImage.run("-d -p 8081:80")
-                }
-            }
-        }
-    }
-    
-    post {
-        always {
-            echo 'Pipeline completed!'
         }
     }
 }
